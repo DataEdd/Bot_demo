@@ -77,7 +77,7 @@ async def get_oop_total(uid: str):
 
         row = await db.execute_fetchone(
             """
-            SELECT SUM(student_paid) AS total_oop
+            SELECT SUM(student_paid) AS total_oop, oop_max_in
             FROM claims
             WHERE uc_student_uid = ?
               AND processed_date BETWEEN ? AND ?
@@ -88,7 +88,14 @@ async def get_oop_total(uid: str):
         if row is None or row["total_oop"] is None:
             return {"uid": uid, "oop_total": 0.0, "status": "no claims found"}
 
-        return {"uid": uid, "oop_total": row["total_oop"]}
+        oop_total = row["total_oop"]
+        oop_max_in = row["oop_max_in"]
+
+        # If the OOP max has been reached, user pays $0
+        if oop_total >= oop_max_in:
+            return {"uid": uid, "oop_total": oop_total, "status": "OOP max reached", "you_pay": 0.0}
+
+        return {"uid": uid, "oop_total": oop_total, "status": "within OOP max", "you_pay": oop_max_in - oop_total}
 
 @app.get("/prediction_history")
 async def prediction_history(uid: str):
@@ -183,3 +190,45 @@ async def log_prediction_result(prediction_id: int):
             "error": error,
             "error_pct": error_pct
         }
+
+@app.post("/superbill", status_code=201)
+async def log_superbill(claim_id: int, billed_amount: float, insurance_paid: float, student_paid: float, services_provided: str, additional_charges: float, adjustments: float, date_of_service: str):
+    async with aiosqlite.connect(DB) as db:
+        await db.execute("""
+            INSERT INTO superbill(
+                claim_id, billed_amount, insurance_paid, student_paid, 
+                services_provided, additional_charges, adjustments, date_of_service
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (claim_id, billed_amount, insurance_paid, student_paid, services_provided, additional_charges, adjustments, date_of_service))
+        await db.commit()
+    return {"status": "superbill logged"}
+
+@app.post("/update_prediction_results", status_code=200)
+async def update_prediction_results(prediction_id: int, actual_student_paid: float):
+    async with aiosqlite.connect(DB) as db:
+        db.row_factory = aiosqlite.Row
+
+        # Fetch the prediction record
+        prediction = await fetch_one(db, "SELECT * FROM predictions WHERE prediction_id = ?", (prediction_id,))
+        if not prediction or not prediction["visit_id"]:
+            raise HTTPException(404, "Prediction or visit not found")
+
+        # Fetch the related claim
+        claim = await fetch_one(db, "SELECT * FROM claims WHERE visit_id = ?", (prediction["visit_id"],))
+        if not claim:
+            raise HTTPException(404, "No claim for that visit")
+
+        # Calculate the error and error percentage
+        predicted = prediction["predicted_total"] if "predicted_total" in prediction else (prediction["predicted_range_min"] + prediction["predicted_range_max"]) / 2
+        error = abs(actual_student_paid - predicted)
+        error_pct = round(error / predicted * 100, 2) if predicted else 0.0
+
+        # Update the prediction results
+        await db.execute("""
+            INSERT INTO prediction_results (
+                prediction_id, actual_student_paid, error_amount, error_pct
+            ) VALUES (?, ?, ?, ?)
+        """, (prediction_id, actual_student_paid, error, error_pct))
+        await db.commit()
+
+    return {"status": "prediction result updated", "error_pct": error_pct}

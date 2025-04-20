@@ -2,9 +2,13 @@
 
 ## Inspiration 
 
-With sharply rising insurance premiums, students at UC Davis frequently underutilize their UC SHIP benefits, missing critical preventative care and cost-saving opportunities. There's a clear need to bridge the gap between available coverage and student awareness.
+Have you ever walked out of a doctor's appointment, already exhausted from the wait, only to be hit with a surprise bill that leaves your jaw on the floor? We've all been there. The expectation? Spend the next few weeks battling with insurance companies, dealing with endless paperwork, and making phone calls just to get a vague idea of what you owe.
 
-Our solution provides UC SHIP enrollees with a personalized, AI-driven insurance companion that simplifies coverage details, promotes timely preventive care, and prevents unexpected medical bills.
+But what if it didn't have to be that way? What if you could get an estimate of your medical costs before even setting foot in the clinic? Welcome to SHIPSmart, your personal insurance companion designed to help UC students enrolled in SHIP (UC Student Health Insurance Plan) take control of their healthcare costs.
+
+SHIPSmart is here to guarantee the lowest possible price for any medical, dental, or vision treatment you need, all while ensuring you get the most out of your insurance benefits. And the best part? If our estimate turns out to be lower than what you were charged, we'll fight for rebates and manage all follow-up claims.
+
+No more surprise bills, no more endless phone calls, just peace of mind knowing that your health coverage is working for you, not the other way around.
 
 ## Key Objectives
 
@@ -20,7 +24,7 @@ Our solution provides UC SHIP enrollees with a personalized, AI-driven insurance
 
 ## How we built it
 
-Designed the app on figma. Implemented frontend using swiftui. Cerebas for AI. Regression model. Letta framework to build complex agent + API call.
+Designed the app on figma. Implemented frontend using swiftui. . Regression model. OpenAi/Gemini framework to build complex agent for user-facing side and Cerebas AI to contact insurers and providers and auto-fill online intake forms when possible.
 
 ## Challenges we ran into
 

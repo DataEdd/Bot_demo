@@ -106,6 +106,19 @@ CREATE TABLE prediction_results (
   result_logged_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ===== superbill =====
+CREATE TABLE superbill (
+  superbill_id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  claim_id             INTEGER REFERENCES claims(claim_id),
+  billed_amount        REAL,
+  insurance_paid       REAL,
+  student_paid         REAL,
+  services_provided    TEXT,  -- Service names or CPT codes
+  additional_charges   REAL,  -- Any extra charges (e.g., for specific tests)
+  adjustments          REAL,  -- Any adjustments made to the billed amount
+  date_of_service      DATE,
+  created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 -- ===== helpful indexes =====
 CREATE INDEX idx_visits_student      ON visits(uc_student_uid);
 CREATE INDEX idx_predictions_student ON predictions(uc_student_uid);
